@@ -8,6 +8,14 @@
 <meta property="og:title" content="DOPA SNAKE | 脳汁全開ヘビゲーム">
 <meta property="og:description" content="コンボをつないでフィーバーに入れ。演出全部盛りのスネークゲーム。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://chocomin-wk.github.io/dopa-snake/">
+<meta property="og:site_name" content="DOPA SNAKE">
+<meta property="og:image" content="https://chocomin-wk.github.io/dopa-snake/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DOPA SNAKE のタイトル画像">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://chocomin-wk.github.io/dopa-snake/">
 <meta name="theme-color" content="#06030d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -113,6 +121,8 @@ a.ghost{display:inline-block;text-decoration:none}
 @keyframes blink{50%{color:#fff}}
 .rank{--rc:#fff;font:400 clamp(110px,36vw,190px)/.92 var(--f-disp);color:var(--rc);opacity:0;
   text-shadow:.045em .045em 0 #fff,0 0 60px var(--rc)}
+.rank.l2{font-size:clamp(84px,27vw,150px)}
+.rank.l3{font-size:clamp(64px,20vw,120px)}
 #result.done .rank{animation:stamp .42s cubic-bezier(.2,1.7,.4,1) forwards}
 @keyframes stamp{0%{opacity:0;transform:scale(4.2) rotate(18deg)}100%{opacity:1;transform:scale(1) rotate(-6deg)}}
 .msg{font:400 18px/1.2 var(--f-disp);min-height:22px;opacity:0;transition:opacity .25s .15s}
@@ -122,13 +132,32 @@ a.ghost{display:inline-block;text-decoration:none}
 .stats dt{font-size:11px;color:var(--dim);margin-bottom:5px}
 .stats dd{font:italic 700 24px/1 var(--f-num)}
 /* ---------- シェア ---------- */
-#share{background:rgba(6,3,13,.9)}
-#share .panel{gap:14px;width:min(100%,380px)}
+#share{display:flex;overflow-y:auto;touch-action:pan-y;background:rgba(6,3,13,.97)}
+#share .panel{margin:auto;gap:12px;width:min(100%,400px)}
+@media (min-width:700px) and (min-height:700px){#share .panel{width:min(100%,560px)}}
 .shareTitle{font:400 22px/1 var(--f-disp);color:var(--yel);text-shadow:.07em .07em 0 var(--mag)}
-#shareText{width:100%;min-height:96px;resize:none;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);
-  background:rgba(255,255,255,.07);color:var(--ink);font:600 15px/1.5 var(--f-ui);padding:12px 14px;
-  user-select:text;-webkit-user-select:text;touch-action:auto}
+.cardWrap{position:relative;width:100%;max-width:100%;aspect-ratio:1200/630;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.06);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.2),0 12px 40px rgba(0,0,0,.55)}
+#cardImg,.cardWrap canvas{display:block;width:100%;height:100%;opacity:0;transition:opacity .2s}
+#cardImg{-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto}
+.cardWrap.ready #cardImg,.cardWrap.ready canvas{opacity:1}
+#cardImg[hidden]{display:none}
+#cardWait{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:var(--dim)}
+.cardWrap.ready #cardWait{display:none}
+.wide{width:100%}
+.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.svcBtn{display:grid;place-items:center;height:44px;border-radius:11px;font:700 14px/1 var(--f-ui);color:#fff;
+  text-decoration:none;border:1.5px solid rgba(255,255,255,.28);touch-action:manipulation}
+.svcBtn.x,.svcBtn.th{background:#000}
+.svcBtn.line{background:#06c755;border-color:#06c755}
+.svcBtn.bsky{background:#1185fe;border-color:#1185fe}
 .shareBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#share .shareBtns{width:100%;flex-wrap:nowrap}
+#share .shareBtns{gap:8px}
+#share .shareBtns .ghost{flex:1;padding:13px 4px;font-size:13px;white-space:nowrap}
+#share .shareBtns .ghost[hidden]{display:none}
+#shareNote{font-size:12px;line-height:1.5;min-height:18px}
+.linkBtn{background:none;border:0;color:var(--dim);font:700 14px/1 var(--f-ui);padding:8px 16px;cursor:pointer;text-decoration:underline}
 .solid{font:700 15px/1 var(--f-ui);color:#12061f;background:var(--yel);border:0;border-radius:12px;padding:14px 22px;
   min-width:150px;cursor:pointer;touch-action:manipulation;box-shadow:4px 4px 0 var(--mag)}
 .solid:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--mag)}
@@ -136,6 +165,8 @@ a.ghost{display:inline-block;text-decoration:none}
   .how{display:none}
   .panel{gap:10px}
   .rank{font-size:84px}
+  .rank.l2{font-size:72px}
+  .rank.l3{font-size:60px}
   .bigscore{font-size:46px}
   .stats{margin:0}
   .cta{padding:15px 30px}
@@ -204,12 +235,20 @@ body.soft .logo,body.soft .cta{animation:none}
 <section id="share" class="ov" aria-label="スコアをシェア">
   <div class="panel">
     <p class="shareTitle">スコアをシェア</p>
-    <textarea id="shareText" readonly rows="3" aria-label="シェアする文面"></textarea>
-    <div class="shareBtns">
-      <button id="bCopy" class="solid" type="button">コピー</button>
-      <a id="shareX" class="ghost" target="_blank" rel="noopener">X でポスト</a>
+    <div id="cardWrap" class="cardWrap"><img id="cardImg" alt="スコアカード画像"><span id="cardWait">画像を作成中</span></div>
+    <button id="bNative" class="solid wide" type="button">画像つきでシェア</button>
+    <div class="svc">
+      <a id="sX" class="svcBtn x" target="_blank" rel="noopener">X</a>
+      <a id="sLine" class="svcBtn line" target="_blank" rel="noopener">LINE</a>
+      <a id="sBsky" class="svcBtn bsky" target="_blank" rel="noopener">Bluesky</a>
+      <a id="sThreads" class="svcBtn th" target="_blank" rel="noopener">Threads</a>
     </div>
-    <button id="bShareClose" class="ghost" type="button">閉じる</button>
+    <div class="shareBtns">
+      <button id="bCopy" class="ghost" type="button">文面をコピー</button>
+      <button id="bSave" class="ghost" type="button">画像を保存</button>
+    </div>
+    <p id="shareNote" class="sub" aria-live="polite"></p>
+    <button id="bShareClose" class="linkBtn" type="button">閉じる</button>
   </div>
 </section>
 
@@ -706,6 +745,7 @@ function comboLost() {
 
 function die() {
   const demo = S.demo, h = S.snake[0], x = cx(h.x), y = cy(h.y), n = S.snake.length;
+  if (!demo) captureScreen();   // 爆発する前の最後の画面をシェア画像の背景用に残す
   S.mode = 'dying'; S.hitstop = 0; S.prevTail = null; S.finalLen = n; S.queue.length = 0;
   S.feverT = 0; S.magnetT = 0; S.gauge = 0;
   document.body.classList.remove('fever'); gaugeLbl.textContent = 'FEVER';
@@ -726,13 +766,15 @@ function showResult() {
   if (S.isRecord) { S.best = S.score; store.set('best', S.best); }
   S.rank = RANKS.find(r => S.score >= r.min) || RANKS[RANKS.length - 1];
   const rk = $('rRank');
-  rk.textContent = S.rank.k; rk.style.setProperty('--rc', 'hsl(' + S.rank.h + ' 100% 62%)');
+  rk.textContent = S.rank.k; rk.className = 'rank' + (S.rank.k.length > 1 ? ' l' + S.rank.k.length : '');   // SS・SSS は画面幅に収まる大きさに
+  rk.style.setProperty('--rc', 'hsl(' + S.rank.h + ' 100% 62%)');
   $('rMsg').textContent = S.rank.m;
   $('rCombo').textContent = S.maxCombo; $('rLen').textContent = S.finalLen; $('rLv').textContent = S.level;
   $('rScore').textContent = '0';
   resultEl.classList.remove('done', 'rec');
   resultEl.classList.add('show');
   hudSync();
+  prepareCard();   // 共有メニューはタップ直後に呼ぶ必要があるので、画像は先に作っておく
 }
 
 /* ================= 更新 ================= */
@@ -1203,38 +1245,240 @@ function toggleMute() {
 }
 function setFxUI() { $('bFx').classList.toggle('off', fxSoft); $('bFx').setAttribute('aria-pressed', String(!fxSoft)); document.body.classList.toggle('soft', fxSoft); }
 function toggleFx() { fxSoft = !fxSoft; FXK = fxSoft ? 0.3 : 1; store.set('fx', fxSoft ? 'soft' : 'full'); setFxUI(); }
-// シェア: まず端末の共有シート。使えない・拒否された環境ではコピーとXポストのパネルを出す
+/* ================= シェア ================= */
+const SITE_URL = 'https://chocomin-wk.github.io/dopa-snake/';
+const HASHTAG = 'DOPASNAKE';
+const FDISP = '"Dela Gothic One","Hiragino Kaku Gothic StdN","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif';
+const FUI = '"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif';
+const enc = encodeURIComponent;
 const shareOpen = () => shareEl.classList.contains('show');
-const shareText = () => 'DOPA SNAKE で ' + fmt(S.score) + ' 点!ランク ' + S.rank.k + '・最大 ' + S.maxCombo + ' コンボ';
-const shareUrl = () => /^https?:$/.test(location.protocol) ? location.href.split('#')[0] : '';   // 公開URLのときだけ付ける
+let card = { key: '', canvas: null, blob: null, dataUrl: '', p: null };
+let shot = null, shotNo = 0;   // ぶつかる直前のゲーム画面
+let attachedKey = '';          // この画像をすでにコピー/保存済みか
+let shareFull = '';
+
+// いま画面に出ているゲーム画面をまるごと残す(直前に描いたフレーム=ヘビが残っている最後の姿)
+function captureScreen() {
+  try {
+    const k = Math.min(1, 1600 / Math.max(cv.width, cv.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(cv.width * k)); c.height = Math.max(1, Math.round(cv.height * k));
+    c.getContext('2d').drawImage(cv, 0, 0, c.width, c.height);
+    shot = c; shotNo++;
+  } catch (e) { shot = null; }
+}
+
+function shareBody() {
+  const r = S.rank, lines = [
+    '🐍 DOPA SNAKE で ' + fmt(S.score) + ' 点!',
+    'ランク ' + r.k + '「' + r.m + '」/ 最大 ' + S.maxCombo + ' コンボ / 長さ ' + S.finalLen + ' / Lv.' + S.level
+  ];
+  if (S.isRecord) lines.push('👑 自己ベスト更新!');
+  lines.push('このスコア、超えられる?');
+  return lines.join('\n');
+}
+
+// リザルト画面のキャプチャを作る。
+// 背景=最後のゲーム画面、その上にリザルトの各要素を実際の表示位置・サイズで描き直す。
+// ボタンがあった場所にはゲーム名とURLを入れる。
+async function drawCard(d) {
+  const scoreTxt = fmt(d.score);
+  try {
+    if (document.fonts && document.fonts.load) await Promise.race([
+      Promise.all([
+        document.fonts.load('400 100px "Dela Gothic One"', 'DOPASNAKE自己ベスト更新!!' + d.rank.k + d.rank.m),
+        document.fonts.load('italic 700 100px "Chakra Petch"', scoreTxt + '0123456789.')
+      ]),
+      new Promise(r => setTimeout(r, 1500))
+    ]);
+  } catch (e) { /* 代替フォントで描く */ }
+  const vw = d.w, vh = d.h, k = Math.min(2, 1600 / Math.max(vw, vh));
+  const c = document.createElement('canvas');
+  c.width = Math.round(vw * k); c.height = Math.round(vh * k);
+  const g = c.getContext('2d'), h = d.rank.h, u = Math.min(vw, vh);
+  g.setTransform(k, 0, 0, k, 0, 0);
+
+  // 背景: 最後のゲーム画面
+  g.fillStyle = '#06030d'; g.fillRect(0, 0, vw, vh);
+  if (d.shot) {
+    const sc = Math.max(vw / d.shot.width, vh / d.shot.height), dw = d.shot.width * sc, dh = d.shot.height * sc;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(d.shot, (vw - dw) / 2, (vh - dh) / 2, dw, dh);
+  }
+  // リザルト画面と同じ暗幕
+  g.save(); g.translate(vw / 2, vh / 2); g.scale(vw * 0.71, vh * 0.71);
+  const dim = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+  dim.addColorStop(0, 'rgba(6,3,13,.4)'); dim.addColorStop(1, 'rgba(6,3,13,.86)');
+  g.fillStyle = dim; g.fillRect(-1.5, -1.5, 3, 3); g.restore();
+  const gl = g.createRadialGradient(vw / 2, vh * 0.36, 0, vw / 2, vh * 0.36, u * 0.7);
+  gl.addColorStop(0, 'hsla(' + h + ',100%,55%,.22)'); gl.addColorStop(1, 'hsla(' + h + ',100%,50%,0)');
+  g.fillStyle = gl; g.fillRect(0, 0, vw, vh);
+
+  // 画面上の実際の位置と文字サイズを読む。読めないときは比率で置く
+  const at = (node, fy, fsize) => {
+    let r = null, fs = 0;
+    try { r = node.getBoundingClientRect(); fs = parseFloat(getComputedStyle(node).fontSize) || 0; } catch (e) { r = null; }
+    if (r && r.width > 0 && r.height > 0 && fs > 0) return { x: r.left + r.width / 2, y: r.top + r.height / 2, size: fs };
+    return { x: vw / 2, y: vh * fy, size: fsize };
+  };
+  const text = (txt, p, font, fill, o) => {
+    o = o || {};
+    let size = p.size;
+    g.font = font.replace('#', size);
+    const w = g.measureText(txt).width, maxW = vw * 0.92;
+    if (w > maxW) { size = size * maxW / w; g.font = font.replace('#', size); }
+    g.save(); g.translate(p.x, p.y); if (o.rot) g.rotate(o.rot);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (o.off) { g.fillStyle = o.off; g.fillText(txt, size * (o.offK || 0.06), size * (o.offK || 0.06)); }
+    if (o.glow) { g.shadowColor = o.glow; g.shadowBlur = o.blur || 24; }
+    g.fillStyle = fill; g.fillText(txt, 0, 0);
+    g.restore();
+    return size;
+  };
+  const q = sel => resultEl.querySelector(sel);
+
+  if (d.record) text('自己ベスト更新!!', at(q('.newrec'), 0.2, u * 0.055), '400 #px ' + FDISP, '#f6ff3a', { rot: -0.07, off: '#ff2bd6', offK: 0.07 });
+  const rc = 'hsl(' + h + ',100%,62%)';
+  text(d.rank.k, at($('rRank'), 0.33, u * 0.34), '400 #px ' + FDISP, rc, { rot: -0.105, off: '#fff', offK: 0.045, glow: rc, blur: 60 });
+  text(d.rank.m, at($('rMsg'), 0.47, u * 0.046), '400 #px ' + FDISP, '#fff');
+  text(scoreTxt, at($('rScore'), 0.56, u * 0.15), 'italic 700 #px "Chakra Petch",' + FUI, '#fff', { glow: 'rgba(33,243,255,.85)', blur: 22 });
+  const cells = resultEl.querySelectorAll('.stats > div');
+  [['最大コンボ', d.combo], ['長さ', d.len], ['レベル', d.lv]].forEach(([lb, v], i) => {
+    const cell = cells[i], dt = cell && cell.querySelector('dt'), dd = cell && cell.querySelector('dd');
+    const fx = vw / 2 + (i - 1) * u * 0.24;
+    const pl = at(dt, 0.655, 11), pv = at(dd, 0.69, 24);
+    if (!dt) { pl.x = fx; pv.x = fx; }
+    text(lb, pl, '700 #px ' + FUI, '#a99dc8');
+    text(String(v), pv, 'italic 700 #px "Chakra Petch",' + FUI, '#fff');
+  });
+
+  // ボタンの位置にゲーム名とURL
+  const pb = at($('bRetry'), 0.8, 0), pu = at($('bShare'), 0.87, 0);
+  const ls = clamp(u * 0.085, 26, 46);
+  g.font = '400 ' + ls + 'px ' + FDISP; g.textAlign = 'left'; g.textBaseline = 'middle';
+  const w1 = g.measureText('DOPA ').width, w2 = g.measureText('SNAKE').width, lx = pb.x - (w1 + w2) / 2;
+  g.save(); g.translate(0, pb.y);
+  g.fillStyle = '#ff2bd6'; g.fillText('DOPA ', lx + ls * 0.06, ls * 0.06); g.fillStyle = '#f6ff3a'; g.fillText('DOPA ', lx, 0);
+  g.fillStyle = '#21f3ff'; g.fillText('SNAKE', lx + w1 + ls * 0.06, ls * 0.06); g.fillStyle = '#fff'; g.fillText('SNAKE', lx + w1, 0);
+  g.restore();
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(246,241,255,.85)'; g.font = 'italic 700 ' + clamp(u * 0.042, 14, 20) + 'px "Chakra Petch",' + FUI;
+  g.fillText(SITE_URL.replace(/^https:\/\//, '').replace(/\/$/, ''), pu.x, pu.y);
+
+  let dataUrl = '';
+  try { dataUrl = c.toDataURL('image/png'); } catch (e) { dataUrl = ''; }
+  const blob = await new Promise(res => { try { c.toBlob(b => res(b), 'image/png'); } catch (e) { res(null); } });
+  return { canvas: c, blob, dataUrl };
+}
+
+function prepareCard() {
+  const d = { score: S.score, rank: S.rank, combo: S.maxCombo, len: S.finalLen, lv: S.level, record: S.isRecord, shot, w: W, h: H };
+  const key = [d.score, d.rank.k, d.combo, d.len, d.lv, d.record, shotNo, W, H].join('|');
+  if (card.key === key && card.p) return card.p;
+  const mine = card = { key, canvas: null, blob: null, dataUrl: '', p: null };
+  mine.p = drawCard(d).then(r => { mine.canvas = r.canvas; mine.blob = r.blob; mine.dataUrl = r.dataUrl; return r; }).catch(() => null);
+  return mine.p;
+}
+// プレビュー表示。<img> で出せない環境では canvas をそのまま置く
+function showCard() {
+  const wrap = $('cardWrap'), img = $('cardImg'), wait = $('cardWait');
+  const old = wrap.querySelector('canvas'); if (old) old.remove();
+  if (!card.canvas) { wrap.classList.remove('ready'); wait.textContent = 'この環境では画像を作れませんでした'; return; }
+  // 縦長のキャプチャでも画面に収まるよう、高さの上限から幅を決める
+  const ratio = card.canvas.width / card.canvas.height, pw = wrap.parentNode.clientWidth || 320;
+  wrap.style.aspectRatio = card.canvas.width + ' / ' + card.canvas.height;
+  wrap.style.width = Math.round(Math.min(pw, H * 0.42 * ratio)) + 'px';
+  const useCanvas = () => { img.hidden = true; const o = wrap.querySelector('canvas'); if (o) o.remove(); wrap.insertBefore(card.canvas, wait); };
+  if (card.dataUrl) { img.hidden = false; img.onerror = useCanvas; img.src = card.dataUrl; }
+  else useCanvas();
+  wrap.classList.add('ready');
+}
+const cardFile = () => card.blob ? new File([card.blob], 'dopa-snake-score.png', { type: 'image/png' }) : null;
+function canShareFile() {
+  const f = cardFile();
+  try { return !!(f && navigator.share && navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; }
+}
+const canCopyImage = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
+function note(t) { $('shareNote').textContent = t; }
+function refreshShareUI() {
+  const nb = $('bNative'), files = canShareFile();
+  nb.hidden = !navigator.share;
+  nb.textContent = files ? '画像つきでシェア' : '共有メニューを開く';
+  note(files ? '「画像つきでシェア」なら画像が添付されます。X などのボタンは画像をコピーして開くので、貼り付けで添付できます'
+    : canCopyImage() ? 'X などのボタンは画像をコピーしてから投稿画面を開きます。貼り付けると添付できます'
+    : 'X などのボタンは画像を保存してから投稿画面を開きます。保存した画像を添付してください');
+}
 function openSharePanel() {
-  const t = shareText(), u = shareUrl();
-  $('shareText').value = u ? t + '\n' + u : t;
-  $('shareX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(t) + (u ? '&url=' + encodeURIComponent(u) : '');
-  $('bCopy').textContent = 'コピー';
+  if (S.mode !== 'over') return;
+  const body = shareBody();
+  shareFull = body + '\n#' + HASHTAG + '\n' + SITE_URL;
+  $('sX').href = 'https://twitter.com/intent/tweet?text=' + enc(body) + '&hashtags=' + HASHTAG + '&url=' + enc(SITE_URL);
+  $('sLine').href = 'https://line.me/R/share?text=' + enc(shareFull);
+  $('sBsky').href = 'https://bsky.app/intent/compose?text=' + enc(shareFull);
+  $('sThreads').href = 'https://www.threads.net/intent/post?text=' + enc(shareFull);
+  $('bCopy').textContent = '文面をコピー'; $('bSave').textContent = '画像を保存';
+  $('cardWrap').classList.remove('ready'); $('cardWait').textContent = '画像を作成中';
+  refreshShareUI();
   shareEl.classList.add('show');
+  const mine = prepareCard();
+  mine.then(() => { if (shareOpen() && card.p === mine) { showCard(); refreshShareUI(); } });
 }
 function closeSharePanel() { shareEl.classList.remove('show'); }
-function share() {
-  if (S.mode !== 'over') return;
-  if (navigator.share) {
-    const text = shareText(), url = shareUrl();
-    let p;
-    try { p = navigator.share(url ? { text, url } : { text }); } catch (e) { openSharePanel(); return; }
-    // 自分でキャンセルしたとき以外(埋め込み表示で禁止されている等)はパネルに切り替える
-    if (p && p.catch) p.catch(err => { if (!err || err.name !== 'AbortError') openSharePanel(); });
-    return;
-  }
-  openSharePanel();
+
+// 共有メニュー: 画像ファイルと文面をまとめて渡す(ここで選んだアプリには画像が添付される)
+function nativeShare() {
+  const f = canShareFile() ? cardFile() : null;
+  const data = f ? { files: [f], text: shareFull } : { text: shareFull };
+  const fail = () => note('ここでは共有メニューを開けません。下のボタンを使ってください');
+  let p;
+  try { p = navigator.share(data); } catch (e) { fail(); return; }
+  if (p && p.catch) p.catch(err => { if (!err || err.name !== 'AbortError') fail(); });
+}
+// X・LINE などのボタン: リンクでは画像を渡せないので、画像をクリップボードに入れて(無理なら保存して)から投稿画面を開く
+function onService(e) {
+  if (!card.blob || attachedKey === card.key) return;   // 準備済みならそのまま開く
+  attachedKey = card.key;
+  if (!canCopyImage()) { saveCard(); return; }          // 保存して、リンクはそのまま開く
+  e.preventDefault();
+  const href = e.currentTarget.href;
+  let done = false;
+  const finish = ok => {
+    if (done) return; done = true;
+    if (ok) note('画像をコピーしました。投稿画面で貼り付け(Ctrl+V / 長押し)すると添付できます');
+    else saveCard();
+    const w = window.open(href, '_blank');
+    if (w) { try { w.opener = null; } catch (err) { /* そのまま */ } }
+    else note((ok ? '画像をコピーしました。' : '') + 'もう一度ボタンを押すと投稿画面が開きます');
+  };
+  try { navigator.clipboard.write([new ClipboardItem({ 'image/png': card.blob })]).then(() => finish(true), () => finish(false)); }
+  catch (err) { finish(false); }
+  setTimeout(() => finish(false), 1500);
 }
 function copyShare() {
-  const ta = $('shareText'), btn = $('bCopy');
-  const done = ok => { btn.textContent = ok ? 'コピーしました' : '文面を長押しでコピー'; if (!ok) { ta.focus(); ta.select(); } };
-  let ok = false;
-  try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); ok = document.execCommand('copy'); } catch (e) { ok = false; }
-  if (ok) { done(true); return; }
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(() => done(true), () => done(false));
-  else done(false);
+  const btn = $('bCopy'), text = shareFull;
+  const fallback = () => { btn.textContent = '文面をコピー'; window.prompt('この文面をコピーしてください', text); };
+  const viaTextarea = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove(); return ok;
+  };
+  if (viaTextarea()) { btn.textContent = 'コピーしました'; return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => { btn.textContent = 'コピーしました'; }, fallback);
+  else fallback();
+}
+function saveCard() {
+  if (!card.canvas) { note('画像の作成中です。少し待ってからもう一度押してください'); return; }
+  const url = card.blob ? URL.createObjectURL(card.blob) : card.dataUrl;
+  if (!url) { note('この環境では保存できません。画像を長押しして保存してください'); return; }
+  const a = document.createElement('a');
+  a.href = url; a.download = 'dopa-snake-' + card.key.split('|')[0] + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  if (card.blob) setTimeout(() => URL.revokeObjectURL(url), 4000);
+  $('bSave').textContent = '保存しました';
+  note('画像を保存しました。投稿に添付してください(保存できないときは画像を長押し / 右クリック)');
 }
 
 const KEYS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
@@ -1274,13 +1518,16 @@ window.addEventListener('pointermove', e => {
 const endPt = e => { if (pt && e.pointerId === pt.id) pt = null; };
 window.addEventListener('pointerup', endPt);
 window.addEventListener('pointercancel', endPt);
-document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (!shareOpen()) e.preventDefault(); }, { passive: false });   // シェア画面だけはスクロール可
+document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('#cardWrap'))) e.preventDefault(); });   // カード画像は長押し保存できるように
 document.addEventListener('gesturestart', e => e.preventDefault());
 
 $('bStart').addEventListener('click', startGame);
 $('bRetry').addEventListener('click', retry);
-$('bShare').addEventListener('click', share);
+$('bShare').addEventListener('click', openSharePanel);
+$('bNative').addEventListener('click', nativeShare);
+$('bSave').addEventListener('click', saveCard);
+['sX', 'sLine', 'sBsky', 'sThreads'].forEach(id => $(id).addEventListener('click', onService));
 $('bCopy').addEventListener('click', copyShare);
 $('bShareClose').addEventListener('click', closeSharePanel);
 // 押したあとフォーカスを外す(残すと Space がポーズではなくそのボタンに効いてしまう)
