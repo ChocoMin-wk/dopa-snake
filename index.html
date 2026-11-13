@@ -133,6 +133,7 @@ a.ghost{display:inline-block;text-decoration:none}
 
 /* ---------- リザルト ---------- */
 #result .panel{gap:12px}
+#bShare{min-width:250px;padding:16px 26px;font-size:15px}   /* もう一回ボタンと同じ幅で押しやすく */
 .newrec{font:400 22px/1 var(--f-disp);color:var(--yel);text-shadow:.07em .07em 0 var(--mag);opacity:0;transform:rotate(-4deg)}
 #result.rec .newrec{opacity:1;animation:blink .32s steps(2) infinite}
 @keyframes blink{50%{color:#fff}}
@@ -1492,7 +1493,7 @@ window.addEventListener('pointerdown', e => {
   if (e.target.closest && e.target.closest('button, a')) return;   // リンクを押してもゲームは始めない
   if (S.demo) { startGame(); return; }
   if (S.mode === 'paused') { resume(); return; }
-  if (S.mode === 'over') { retry(); return; }
+  if (S.mode === 'over') return;   // リザルト画面では空いている所を押しても次のゲームを始めない(ボタンを少し外したときの誤爆防止)
   pt = { x: e.clientX, y: e.clientY, id: e.pointerId };
 });
 window.addEventListener('pointermove', e => {
