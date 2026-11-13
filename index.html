@@ -162,12 +162,6 @@ a.ghost{display:inline-block;text-decoration:none}
 #cardWait{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:var(--dim)}
 .cardWrap.ready #cardWait{display:none}
 .wide{width:100%}
-.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
-.svcBtn{display:grid;place-items:center;height:44px;border-radius:11px;font:700 14px/1 var(--f-ui);color:#fff;
-  text-decoration:none;border:1.5px solid rgba(255,255,255,.28);touch-action:manipulation}
-.svcBtn.x,.svcBtn.th{background:#000}
-.svcBtn.line{background:#06c755;border-color:#06c755}
-.svcBtn.bsky{background:#1185fe;border-color:#1185fe}
 .shareBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 #share .shareBtns{width:100%;flex-wrap:nowrap}
 #share .shareBtns{gap:8px}
@@ -254,13 +248,7 @@ body.soft .logo,body.soft .cta{animation:none}
   <div class="panel">
     <p class="shareTitle">スコアをシェア</p>
     <div id="cardWrap" class="cardWrap"><img id="cardImg" alt="スコアカード画像"><span id="cardWait">画像を作成中</span></div>
-    <button id="bNative" class="solid wide" type="button">画像つきでシェア</button>
-    <div class="svc">
-      <a id="sX" data-svc="x" class="svcBtn x" target="_blank" rel="noopener">X</a>
-      <a id="sLine" data-svc="line" class="svcBtn line" target="_blank" rel="noopener">LINE</a>
-      <a id="sBsky" data-svc="bluesky" class="svcBtn bsky" target="_blank" rel="noopener">Bluesky</a>
-      <a id="sThreads" data-svc="threads" class="svcBtn th" target="_blank" rel="noopener">Threads</a>
-    </div>
+    <button id="bNative" class="solid wide" type="button">シェア</button>
     <div class="shareBtns">
       <button id="bCopy" class="ghost" type="button">文面をコピー</button>
       <button id="bSave" class="ghost" type="button">画像を保存</button>
@@ -1276,11 +1264,9 @@ const SITE_URL = 'https://chocomin-wk.github.io/dopa-snake/';
 const HASHTAG = 'DOPASNAKE';
 const FDISP = '"Dela Gothic One","Hiragino Kaku Gothic StdN","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif';
 const FUI = '"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif';
-const enc = encodeURIComponent;
 const shareOpen = () => shareEl.classList.contains('show');
 let card = { key: '', canvas: null, blob: null, dataUrl: '', p: null };
 let shot = null, shotNo = 0;   // ぶつかる直前のゲーム画面
-let attachedKey = '';          // この画像をすでにコピー/保存済みか
 let shareFull = '';
 
 // いま画面に出ているゲーム画面をまるごと残す(直前に描いたフレーム=ヘビが残っている最後の姿)
@@ -1424,24 +1410,17 @@ function canShareFile() {
   const f = cardFile();
   try { return !!(f && navigator.share && navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; }
 }
-const canCopyImage = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
 function note(t) { $('shareNote').textContent = t; }
 function refreshShareUI() {
   const nb = $('bNative'), files = canShareFile();
-  nb.hidden = !navigator.share;
-  nb.textContent = files ? '画像つきでシェア' : '共有メニューを開く';
-  note(files ? '「画像つきでシェア」なら画像が添付されます。X などのボタンは画像をコピーして開くので、貼り付けで添付できます'
-    : canCopyImage() ? 'X などのボタンは画像をコピーしてから投稿画面を開きます。貼り付けると添付できます'
-    : 'X などのボタンは画像を保存してから投稿画面を開きます。保存した画像を添付してください');
+  nb.hidden = !navigator.share;   // 共有メニューがない環境(主に PC)では出さない
+  note(files ? '' : navigator.share ? '画像も載せるときは「画像を保存」して投稿に添付してください'
+    : '「画像を保存」して、投稿に添付してください');
 }
 function openSharePanel() {
   if (S.mode !== 'over') return;
   const body = shareBody();
   shareFull = body + '\n#' + HASHTAG + '\n' + SITE_URL;
-  $('sX').href = 'https://twitter.com/intent/tweet?text=' + enc(body) + '&hashtags=' + HASHTAG + '&url=' + enc(SITE_URL);
-  $('sLine').href = 'https://line.me/R/share?text=' + enc(shareFull);
-  $('sBsky').href = 'https://bsky.app/intent/compose?text=' + enc(shareFull);
-  $('sThreads').href = 'https://www.threads.net/intent/post?text=' + enc(shareFull);
   $('bCopy').textContent = '文面をコピー'; $('bSave').textContent = '画像を保存';
   $('cardWrap').classList.remove('ready'); $('cardWait').textContent = '画像を作成中';
   refreshShareUI();
@@ -1461,27 +1440,6 @@ function nativeShare() {
   let p;
   try { p = navigator.share(data); } catch (e) { fail(); return; }
   if (p && p.catch) p.catch(err => { if (!err || err.name !== 'AbortError') fail(); });
-}
-// X・LINE などのボタン: リンクでは画像を渡せないので、画像をクリップボードに入れて(無理なら保存して)から投稿画面を開く
-function onService(e) {
-  track('share', { method: e.currentTarget.dataset.svc, content_type: 'score' });
-  if (!card.blob || attachedKey === card.key) return;   // 準備済みならそのまま開く
-  attachedKey = card.key;
-  if (!canCopyImage()) { saveCard(); return; }          // 保存して、リンクはそのまま開く
-  e.preventDefault();
-  const href = e.currentTarget.href;
-  let done = false;
-  const finish = ok => {
-    if (done) return; done = true;
-    if (ok) note('画像をコピーしました。投稿画面で貼り付け(Ctrl+V / 長押し)すると添付できます');
-    else saveCard();
-    const w = window.open(href, '_blank');
-    if (w) { try { w.opener = null; } catch (err) { /* そのまま */ } }
-    else note((ok ? '画像をコピーしました。' : '') + 'もう一度ボタンを押すと投稿画面が開きます');
-  };
-  try { navigator.clipboard.write([new ClipboardItem({ 'image/png': card.blob })]).then(() => finish(true), () => finish(false)); }
-  catch (err) { finish(false); }
-  setTimeout(() => finish(false), 1500);
 }
 function copyShare() {
   const btn = $('bCopy'), text = shareFull;
@@ -1556,7 +1514,6 @@ $('bRetry').addEventListener('click', retry);
 $('bShare').addEventListener('click', openSharePanel);
 $('bNative').addEventListener('click', nativeShare);
 $('bSave').addEventListener('click', () => { track('share', { method: 'save_image', content_type: 'score' }); saveCard(); });
-['sX', 'sLine', 'sBsky', 'sThreads'].forEach(id => $(id).addEventListener('click', onService));
 $('bCopy').addEventListener('click', () => { track('share', { method: 'copy_text', content_type: 'score' }); copyShare(); });
 $('bShareClose').addEventListener('click', closeSharePanel);
 // 押したあとフォーカスを外す(残すと Space がポーズではなくそのボタンに効いてしまう)
