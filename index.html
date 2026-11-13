@@ -16,6 +16,21 @@
 <meta property="og:image:alt" content="DOPA SNAKE のタイトル画像">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://chocomin-wk.github.io/dopa-snake/">
+<!-- アクセス解析(Google アナリティクス 4)。公開URLで開いたときだけ読み込み、手元の確認では計測しない -->
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+(function () {
+  var GA_ID = 'G-J3SLL520ZV';
+  if (location.hostname !== 'chocomin-wk.github.io') return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+  document.head.appendChild(s);
+  gtag('js', new Date());
+  gtag('config', GA_ID);
+})();
+</script>
 <meta name="theme-color" content="#06030d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -111,6 +126,8 @@ body.soft .callout{animation-name:calloutSoft}
 a.ghost{display:inline-block;text-decoration:none}
 .bestline{font:italic 700 16px/1 var(--f-num);color:var(--dim)}
 .bestline span{color:var(--yel)}
+.gaNote{font-size:11px;line-height:1.5;font-weight:600;color:#7d7299;margin-top:-6px}
+.gaNote a{color:inherit}
 .pausedTxt{font:400 clamp(44px,14vw,84px)/1 var(--f-disp);color:#fff;text-shadow:.05em .05em 0 var(--mag)}
 .sub{font-size:14px;color:var(--dim)}
 
@@ -206,6 +223,7 @@ body.soft .logo,body.soft .cta{animation:none}
     </ul>
     <button id="bStart" class="cta" type="button">スタート</button>
     <p class="bestline">BEST <span id="tBest">0</span></p>
+    <p class="gaNote">このサイトはアクセス解析に Google アナリティクスを使用しています(<a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener">詳細</a>)</p>
   </div>
 </section>
 
@@ -238,10 +256,10 @@ body.soft .logo,body.soft .cta{animation:none}
     <div id="cardWrap" class="cardWrap"><img id="cardImg" alt="スコアカード画像"><span id="cardWait">画像を作成中</span></div>
     <button id="bNative" class="solid wide" type="button">画像つきでシェア</button>
     <div class="svc">
-      <a id="sX" class="svcBtn x" target="_blank" rel="noopener">X</a>
-      <a id="sLine" class="svcBtn line" target="_blank" rel="noopener">LINE</a>
-      <a id="sBsky" class="svcBtn bsky" target="_blank" rel="noopener">Bluesky</a>
-      <a id="sThreads" class="svcBtn th" target="_blank" rel="noopener">Threads</a>
+      <a id="sX" data-svc="x" class="svcBtn x" target="_blank" rel="noopener">X</a>
+      <a id="sLine" data-svc="line" class="svcBtn line" target="_blank" rel="noopener">LINE</a>
+      <a id="sBsky" data-svc="bluesky" class="svcBtn bsky" target="_blank" rel="noopener">Bluesky</a>
+      <a id="sThreads" data-svc="threads" class="svcBtn th" target="_blank" rel="noopener">Threads</a>
     </div>
     <div class="shareBtns">
       <button id="bCopy" class="ghost" type="button">文面をコピー</button>
@@ -274,6 +292,10 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('dopasnake.' + k); return v === null ? d : v; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('dopasnake.' + k, String(v)); } catch (e) { /* 保存できなくても続行 */ } }
 };
+
+// アクセス解析へのイベント送信。計測できない環境でもゲームは止めない
+const track = (name, params) => { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* 無視 */ } };
+let playCount = 0;
 
 const cv = $('game'), ctx = cv.getContext('2d');
 const hudEl = $('hud'), scoreEl = $('score'), bestEl = $('best'), lvEl = $('lvChip');
@@ -719,7 +741,7 @@ function levelUp() {
   S.level++; S.hueT += 47;
   ring(bx + bw / 2, by + bh / 2, S.hueT, Math.max(bw, bh) * 0.8, 0.8);
   ripple(cols / 2, rows / 2, S.hueT, 1.2);
-  if (!S.demo) { callout('LEVEL UP!', mod(S.hueT, 360), 'low'); sfxLevel(); flash(0.18, mod(S.hueT, 360)); }
+  if (!S.demo) { callout('LEVEL UP!', mod(S.hueT, 360), 'low'); sfxLevel(); flash(0.18, mod(S.hueT, 360)); track('level_up', { level: S.level }); }
 }
 
 function startFever() {
@@ -730,6 +752,7 @@ function startFever() {
   burst(x, y, 0, 70, 560, { spread: 360, size: 4, life: 0.8 });
   if (!S.demo) {
     document.body.classList.add('fever'); gaugeLbl.textContent = 'FEVER ×3';
+    track('fever_start', { level: S.level, score: S.score });
     callout('フィーバー!!', 320); S.wordHold = S.time + 1; sfxFever(); flash(0.4, 300); shake(16); S.hitstop = 0.12; vib([30, 40, 60]);
   }
 }
@@ -774,6 +797,7 @@ function showResult() {
   resultEl.classList.remove('done', 'rec');
   resultEl.classList.add('show');
   hudSync();
+  track('post_score', { score: S.score, level: S.level, character: S.rank.k, max_combo: S.maxCombo, length: S.finalLen, new_record: S.isRecord, play_count: playCount });
   prepareCard();   // 共有メニューはタップ直後に呼ぶ必要があるので、画像は先に作っておく
 }
 
@@ -1218,6 +1242,7 @@ function startGame() {
   titleEl.classList.remove('show');
   layout(true);
   newGame(false);
+  track('game_start', { play_count: ++playCount, retry: false });
 }
 function retry() {
   if (S.mode !== 'over' || S.resT < 0.5 || shareOpen()) return;
@@ -1226,6 +1251,7 @@ function retry() {
   for (let i = P.length - 1; i >= 0; i--) if (P[i].type === 2) P.splice(i, 1);
   layout(true);
   newGame(false);
+  track('game_start', { play_count: ++playCount, retry: true });
 }
 function pause() {
   if (S.mode !== 'play' || S.demo) return;
@@ -1420,6 +1446,7 @@ function openSharePanel() {
   $('cardWrap').classList.remove('ready'); $('cardWait').textContent = '画像を作成中';
   refreshShareUI();
   shareEl.classList.add('show');
+  track('share_open', { score: S.score, character: S.rank.k });
   const mine = prepareCard();
   mine.then(() => { if (shareOpen() && card.p === mine) { showCard(); refreshShareUI(); } });
 }
@@ -1429,6 +1456,7 @@ function closeSharePanel() { shareEl.classList.remove('show'); }
 function nativeShare() {
   const f = canShareFile() ? cardFile() : null;
   const data = f ? { files: [f], text: shareFull } : { text: shareFull };
+  track('share', { method: f ? 'native_image' : 'native_text', content_type: 'score' });
   const fail = () => note('ここでは共有メニューを開けません。下のボタンを使ってください');
   let p;
   try { p = navigator.share(data); } catch (e) { fail(); return; }
@@ -1436,6 +1464,7 @@ function nativeShare() {
 }
 // X・LINE などのボタン: リンクでは画像を渡せないので、画像をクリップボードに入れて(無理なら保存して)から投稿画面を開く
 function onService(e) {
+  track('share', { method: e.currentTarget.dataset.svc, content_type: 'score' });
   if (!card.blob || attachedKey === card.key) return;   // 準備済みならそのまま開く
   attachedKey = card.key;
   if (!canCopyImage()) { saveCard(); return; }          // 保存して、リンクはそのまま開く
@@ -1502,7 +1531,7 @@ let pt = null;
 window.addEventListener('pointerdown', e => {
   audioInit();
   if (shareOpen()) { if (e.target === shareEl) closeSharePanel(); return; }   // パネルの外側タップで閉じる
-  if (e.target.closest && e.target.closest('button')) return;
+  if (e.target.closest && e.target.closest('button, a')) return;   // リンクを押してもゲームは始めない
   if (S.demo) { startGame(); return; }
   if (S.mode === 'paused') { resume(); return; }
   if (S.mode === 'over') { retry(); return; }
@@ -1526,9 +1555,9 @@ $('bStart').addEventListener('click', startGame);
 $('bRetry').addEventListener('click', retry);
 $('bShare').addEventListener('click', openSharePanel);
 $('bNative').addEventListener('click', nativeShare);
-$('bSave').addEventListener('click', saveCard);
+$('bSave').addEventListener('click', () => { track('share', { method: 'save_image', content_type: 'score' }); saveCard(); });
 ['sX', 'sLine', 'sBsky', 'sThreads'].forEach(id => $(id).addEventListener('click', onService));
-$('bCopy').addEventListener('click', copyShare);
+$('bCopy').addEventListener('click', () => { track('share', { method: 'copy_text', content_type: 'score' }); copyShare(); });
 $('bShareClose').addEventListener('click', closeSharePanel);
 // 押したあとフォーカスを外す(残すと Space がポーズではなくそのボタンに効いてしまう)
 const hudBtn = (id, fn) => $(id).addEventListener('click', e => { fn(); e.currentTarget.blur(); });
